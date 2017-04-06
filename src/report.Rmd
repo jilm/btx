@@ -1,0 +1,50 @@
+---
+title: "BTX"
+author: "Jiří Lidinský"
+date: "6 dubna 2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library("ggplot2")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Pokus o vyhodnocení vlivu BTX na třes
+
+### Načtení a podrobný průvodce vyhodnocením jednoho z datových souborů
+
+```{r btx, include=TRUE}
+data_filenames <- list.files("data", full.names=TRUE)
+d <- read.csv(data_filenames[1], header=TRUE, sep=';', skip=1)
+len <- length(d$Time.since.start.in.ms)
+Dtime <- d$Time.since.start.in.ms[len] 
+```
+
+Datum a čas záznamu dat: `r d$YYYY.MO.DD.HH.MI.SS_SSS[1]`
+Počet záznamů: `r len`
+Celková délka záznamu je: `r Dtime / 1000` s
+Vzorkovací perioda tak je: `r Dtime / len` ms
+
+Senzor zaznamenává zrychlení ve všech třech prostorových osách. Zaznamenaná data vypadají takto:
+
+```{r pressure, echo=FALSE}
+ggplot(data=d) + geom_line(mapping = aes(x=Time.since.start.in.ms, y=ACCELEROMETER.X..m.sÂ..), col="red") + geom_line(mapping = aes(x=d$Time.since.start.in.ms, d$ACCELEROMETER.Y..m.sÂ..), col="green")+geom_line(mapping = aes(x=d$Time.since.start.in.ms, y=d$ACCELEROMETER.Z..m.sÂ..), col="blue")
+```
+
+
+
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
