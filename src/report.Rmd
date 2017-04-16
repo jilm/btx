@@ -8,29 +8,170 @@ output: pdf_document
 ```{r setup, include=FALSE}
 library("ggplot2")
 knitr::opts_chunk$set(echo = TRUE)
+
+loadAccelerationData <- function(filename) {
+
+  d <- read.csv(filename, header=TRUE, sep=';', skip=1)
+  # rename columns of the data frame
+  names(d)[names(d)=="YYYY.MO.DD.HH.MI.SS_SSS"] <- "dateTime"
+  names(d)[names(d)=="Time.since.start.in.ms"] <- "time"
+  names(d)[names(d)=="ACCELEROMETER.X..m.sÂ.."] <- "ax"
+  names(d)[names(d)=="ACCELEROMETER.Y..m.sÂ.."] <- "ay"
+  names(d)[names(d)=="ACCELEROMETER.Z..m.sÂ.."] <- "az"
+  # takes only relevant data columns
+  d <- d[c("dateTime", "time", "ax", "ay", "az")]
+  return(d)
+}
+
+calculateNorm <- function(data) {
+  
+  n <- nrow(data)
+  i1 <- n %/% 3
+  i2 <- (n %/% 3) * 2
+  d <- data[i1:i2, ]
+  
+  a <- apply(d[c("ax", "ay", "az")], MARGIN=1, FUN=norm, '2')
+  return(var(a))
+}
+
 ```
 
-## Pokus o vyhodnocení vlivu BTX na třes
+## Pokus o vyhodnocení vlivu BTX na třes ruky
+
+### Úvodem
+
+Nejsem schopen subjektivně ohodnotit vliv BTX na třes mé levé ruky.
+Je to dáno především tím, že můj třes není ani během jednoho dne
+stejný. Podílí se na něm mnoho faktorů. O některých vím, jako třeba
+léky, stres nebo pozvolna postupující nemoc, pravděpodobně jsou tu
+ale i vlivy o kterých nemám ani tušení. Třes tak významě kolísá
+nejen den ode dne, ale i v průběhu jednoho dne.
+
+Téměř každý tzv. chytrý telefon obsahuje kromě jiného senzor zrychlení
+ve všech prostorových osách. Napadlo mě, využít telefonu k vyhodnocení
+třesu ruky. Sám mám poměrně levný telefon s OS Android. K záznamu dat
+používám aplikaci:
+
+### Záznam dat
+
+Toto je asi nejslabší místo, kde bych určitě potřeboval konzultaci
+s nějakým specialistou. Prozatím provádím měření tak, že si klidně
+sednu na židli, opřu se, levou ruku nechám volně vedle těla, předloktí
+ohnuté tak, že je téměř vodorovně s podlahou, pokouším se sedět co
+možná nejvíce v klidu, v duchu odpočítám 20s a záznam dat vypnu.
 
 ### Načtení a podrobný průvodce vyhodnocením jednoho z datových souborů
 
 ```{r btx, include=TRUE}
-data_filenames <- list.files("data", full.names=TRUE)
-d <- read.csv(data_filenames[1], header=TRUE, sep=';', skip=1)
-len <- length(d$Time.since.start.in.ms)
-Dtime <- d$Time.since.start.in.ms[len] 
+# get filenames in the data directory
+data_filenames <- list.files("../data", full.names=TRUE)
+print(data_filenames[3])
+# load the first file
+d <- loadAccelerationData(data_filenames[8])
+n <- nrow(d)
+Dtime <- d[n, "time"] 
 ```
 
-Datum a čas záznamu dat: `r d$YYYY.MO.DD.HH.MI.SS_SSS[1]`
-Počet záznamů: `r len`
-Celková délka záznamu je: `r Dtime / 1000` s
-Vzorkovací perioda tak je: `r Dtime / len` ms
+Datum a čas záznamu dat: `r d[1, "dateTime"]`,
+počet záznamů: `r n`,
+Celková délka záznamu je: `r Dtime / 1000` s,
+Vzorkovací perioda tak je: `r Dtime / n` ms,
 
 Senzor zaznamenává zrychlení ve všech třech prostorových osách. Zaznamenaná data vypadají takto:
 
 ```{r pressure, echo=FALSE}
-ggplot(data=d) + geom_line(mapping = aes(x=Time.since.start.in.ms, y=ACCELEROMETER.X..m.sÂ..), col="red") + geom_line(mapping = aes(x=d$Time.since.start.in.ms, d$ACCELEROMETER.Y..m.sÂ..), col="green")+geom_line(mapping = aes(x=d$Time.since.start.in.ms, y=d$ACCELEROMETER.Z..m.sÂ..), col="blue")
+ggplot(data = d) +
+  geom_line(mapping = aes(x=d$time, y=d$ax), col="red") +
+  geom_line(mapping = aes(x=time, y=ay), col="green") +
+  geom_line(mapping = aes(x=time, y=az), col="blue")
 ```
+
+Protože začátek a konec záznamu může být ovlivněn manipulací s telefonem
+(zapnutí a vypnutí záznamu dat), pro další zpracování vezmu pouze prostřední 
+třetinu záznamu.
+
+```{r, echo=FALSE}
+i1 <- n %/% 3
+i2 <- (n %/% 3) * 2
+d <- d[i1:i2, ]
+```
+
+Protože potřebuji získat údaj o velikosti třesu, nejlépe jako jedno číslo a nepotřebuji
+prostorové rozložení, vypočtu velikost vektoru zrychlení jako
+
+$a = sqrt(a_x^2 + a_y^2 + a_z^2)$
+
+```{r acceleration size, echo=FALSE}
+a <- apply(d[c("ax", "ay", "az")], MARGIN=1, FUN=norm, '2')
+ggplot() + geom_line(mapping = aes(x=d$time, y=a), col="red")
+```
+
+V grafu je vidět poměrně velká stejnosměrná složka. Ta je samozřejmě dána tíhovým
+zrychlením země. Mohli bychom tak třeba určit jak byl telefon natočený (k tomu tam
+ten senzor ve skutečnosti je, abychom viděli obrázek na telefonu stále stejně
+orientovaný i když otočíme telefon vzhůru nohama). Můžeme ještě zkontrolovat jestli
+tato složka opravdu odpovídá konstantě g, `r mean(a)`. Pro účely vyhodnocení ale
+tuto složku odečtu.
+
+```{r}
+a <- a - mean(a)
+``` 
+
+Teď bych potřeboval nějakou normu tak abych mohl data porovnávat. Tedy nejlépe
+jako jedno číslo, které by mi řeklo, jestli je teď třes větší nebo menší než
+včera nebo před týdnem. Takových norem se nabízí hned několik, napadá mě třeba
+maximální hodnota. Nejprve ale jak vypadá histogram toho vektoru zrychlení.
+
+```{r}
+qplot(a)
+```
+
+Protože tvar histogramu je téměř gausovský, dal by se vypočítat i tzv. rozptyl:
+`r var(a)`
+
+Ještě se potřebuji vypořádat s tím zrychlením. Hodnota zrychlení říká, jak moc rychle
+se ruka chvěje. Byl-li by třes pomalý, ale třeba s velkou amplitudou, mohli bychom
+dostat horší výsledek, než u například rychlého kmitání s malou amplitudou. Bylo
+by možné získat ze zrychlení i amplitudu třesu? Teoreticky samozřejmě ano,
+protože zrychlení je pouze druhá derivace polohy podle času. Takže když budeme
+zrychlení integrovat, dostaneme zpět polohu ruky a tím i amplitudu třesu.
+
+$a = dv/dt = d^2l/dt^2$
+
+```{r}
+v <- cumsum(a)
+ggplot() + geom_line(mapping = aes(x=d$time, y=v), col="red")
+l <- cumsum(v)
+ggplot() + geom_line(mapping = aes(x=d$time, y=l), col="red")
+```
+
+
+### Dávkové zpracování naměřených dat
+
+```{r}
+
+t0 <- Sys.time()
+values <- c()
+ts <- c()
+for (filename in data_filenames) {
+  d <- loadAccelerationData(filename)
+  v <- calculateNorm(d)
+  values <- c(values, v)
+  ts <- c(ts, difftime(t0, d$dateTime[1], units="hours"))
+}
+
+ggplot() + geom_point(mapping = aes(x=ts, y=values), col="red")
+
+```
+
+Abych mohl data vynést do grafu, potřebuji ještě x osu. Na x osu budu
+vynášet čas od aplikace btx. Tato proběhla ve středu 5.4.2017 v asi 9:00.
+Toto bude čas $t_0$.
+
+
+
+### Závěrem
+
 
 
 
