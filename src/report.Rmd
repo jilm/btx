@@ -1,6 +1,6 @@
 ---
 title: "BTX"
-author: "Jiří Lidinský"
+author: "jilm"
 date: "6 dubna 2017"
 output: pdf_document
 ---
@@ -50,15 +50,16 @@ nejen den ode dne, ale i v průběhu jednoho dne.
 Téměř každý tzv. chytrý telefon obsahuje kromě jiného senzor zrychlení
 ve všech prostorových osách. Napadlo mě, využít telefonu k vyhodnocení
 třesu ruky. Sám mám poměrně levný telefon s OS Android. K záznamu dat
-používám aplikaci:
+používám aplikaci AndroSensor.
 
 ### Záznam dat
 
 Toto je asi nejslabší místo, kde bych určitě potřeboval konzultaci
 s nějakým specialistou. Prozatím provádím měření tak, že si klidně
 sednu na židli, opřu se, levou ruku nechám volně vedle těla, předloktí
-ohnuté tak, že je téměř vodorovně s podlahou, pokouším se sedět co
-možná nejvíce v klidu, v duchu odpočítám 20s a záznam dat vypnu.
+ohnuté tak, že je téměř vodorovně s podlahou, tedy loket svírá pokud
+možno pravý úhel, pokouším se sedět co možná nejvíce v klidu. Zapnu
+záznam a v duchu odpočítám 20s. Záznam dat vypnu.
 
 ### Načtení a podrobný průvodce vyhodnocením jednoho z datových souborů
 
@@ -96,8 +97,9 @@ i2 <- (n %/% 3) * 2
 d <- d[i1:i2, ]
 ```
 
-Protože potřebuji získat údaj o velikosti třesu, nejlépe jako jedno číslo a nepotřebuji
-prostorové rozložení, vypočtu velikost vektoru zrychlení jako
+Protože potřebuji získat údaj o velikosti třesu, nejlépe jako jedno číslo a nepotřebuji prostorové rozložení, vypočtu v první fázi pouze euklidovskou velikost vektoru zrychlení. Tím dostanu pouze jednorozměrný signál. Napadá mě, že rozborem signálu v jednotlivých souřadnicích by se možná dal poznat "směr" toho třesu a odtud odhadnout které svaly se na něm nejvíce podílí. Tady už by ale byla potřeba nějakého odborníka na anatomii.
+
+Velikost vektoru zrychlení:
 
 $a = sqrt(a_x^2 + a_y^2 + a_z^2)$
 
@@ -106,7 +108,7 @@ a <- apply(d[c("ax", "ay", "az")], MARGIN=1, FUN=norm, '2')
 ggplot() + geom_line(mapping = aes(x=d$time, y=a), col="red")
 ```
 
-V grafu je vidět poměrně velká stejnosměrná složka. Ta je samozřejmě dána tíhovým
+V grafu je vidět poměrně velká "stejnosměrná" složka. Ta je samozřejmě dána tíhovým
 zrychlením země. Mohli bychom tak třeba určit jak byl telefon natočený (k tomu tam
 ten senzor ve skutečnosti je, abychom viděli obrázek na telefonu stále stejně
 orientovaný i když otočíme telefon vzhůru nohama). Můžeme ještě zkontrolovat jestli
@@ -145,6 +147,7 @@ l <- cumsum(v)
 ggplot() + geom_line(mapping = aes(x=d$time, y=l), col="red")
 ```
 
+Protože jde o v čase i hodnotě diskrétní data, nelze vypočítat integrál, ale jen sumu. Každopádně jak je vidět z grafu, tak sumace se chová jako filtr, který to chvění vyhladí.
 
 ### Dávkové zpracování naměřených dat
 
@@ -153,11 +156,14 @@ ggplot() + geom_line(mapping = aes(x=d$time, y=l), col="red")
 t0 <- Sys.time()
 values <- c()
 ts <- c()
+h <- c()
+
 for (filename in data_filenames) {
   d <- loadAccelerationData(filename)
   v <- calculateNorm(d)
   values <- c(values, v)
   ts <- c(ts, difftime(t0, d$dateTime[1], units="hours"))
+  h <- c(h, difftime(as.Date(d$dateTime[1]), d$dateTime[1], units="hours"))
 }
 
 ggplot() + geom_point(mapping = aes(x=ts, y=values), col="red")
@@ -171,21 +177,3 @@ Toto bude čas $t_0$.
 
 
 ### Závěrem
-
-
-
-
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-
-## Including Plots
-
-You can also embed plots, for example:
-
-
-
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
