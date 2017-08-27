@@ -61,6 +61,25 @@ ohnuté tak, že je téměř vodorovně s podlahou, tedy loket svírá pokud
 možno pravý úhel, pokouším se sedět co možná nejvíce v klidu. Zapnu
 záznam a v duchu odpočítám 20s. Záznam dat vypnu.
 
+### Fyzikální vsuvka
+
+Jako neznalý problematiky bych řekl, že parametrem třesu bude něco jako amplituda, tedy maximální rozkmit a frekvence, tedy jak rychle přejde končetina z jedné polohy do druhé. Telefonem ale měříme zrychlení v euklidovských souřadnicích. Jaký je tedy vztah mezi naměřeným zrychlením a požadovaným rozkmitem a frekvencí?
+
+Pro zjednodušení budu předpokládat, že třesoucí se končetinu lze simulovat jako matematické kyvadlo v rovině. Například, budu-li mít zafixovaný loket, a budu měřit zrychlení zápěstí.
+
+Za předpokladu, že maximální výchylka $\varphi_m$ není velká, takže $\sin \varphi \approx \varphi$, což se v tomto případě dá předpokládat, pak pro kyvadlo platí:
+
+$$\ddot{\varphi} + \omega_0^2 \varphi = 0$$
+
+Řešením této diferenciální rovnice pak je:
+
+$$\varphi(t) = \varphi_m \cos(\omega_0 t)$$
+
+Z pohybu po kružnici pak dostaneme rovnice pro tečné a dostředivé zrychlení:
+
+$$a_t = r \ddot{\varphi} = -r\omega_0^2\varphi = -r\omega_0^2 \varphi_m \cos(\omega_0^2 t)$$
+Porovnáním předchozích rovnic je vidět, že pokud měříme místo výchylky tečné zrychlení dostaneme sinusový průběh o stejné frekvenci, ale amplituda je rovna $r \omega_0^2 \varphi_m$. Bude-li mít třes vždy stejnou frekvenci, můžeme porovnávat přímo amplitudu tečného zrychlení, bude-li frekvence pokaždé jiná, musíme amplitudu tečného zrychlení vydělit frekvencí.
+
 ### Načtení a podrobný průvodce vyhodnocením jednoho z datových souborů
 
 ```{r btx, include=TRUE}
