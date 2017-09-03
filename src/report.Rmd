@@ -67,18 +67,22 @@ Jako neznalý problematiky bych řekl, že parametrem třesu bude něco jako amp
 
 Pro zjednodušení budu předpokládat, že třesoucí se končetinu lze simulovat jako matematické kyvadlo v rovině. Například, budu-li mít zafixovaný loket, a budu měřit zrychlení zápěstí.
 
-Za předpokladu, že maximální výchylka $\varphi_m$ není velká, takže $\sin \varphi \approx \varphi$, což se v tomto případě dá předpokládat, pak pro kyvadlo platí:
+Za předpokladu, že maximální výchylka $\varphi_m$ není velká, takže $\sin \varphi \approx \varphi$, což se v tomto případě dá předpokládat, pak je kyvadlo lineární systém druhého řádu:
 
-$$\ddot{\varphi} + \omega_0^2 \varphi = 0$$
+$$\ddot{\varphi} + \omega_0^2 \varphi = 0$$,
 
-Řešením této diferenciální rovnice pak je:
+Řešením diferenciální rovnice pak je:
 
 $$\varphi(t) = \varphi_m \cos(\omega_0 t)$$
-
+kde $\omega_0 = 2\pi f$.
 Z pohybu po kružnici pak dostaneme rovnice pro tečné a dostředivé zrychlení:
 
-$$a_t = r \ddot{\varphi} = -r\omega_0^2\varphi = -r\omega_0^2 \varphi_m \cos(\omega_0^2 t)$$
+$$a_t = r \ddot{\varphi} = -r\omega_0^2\varphi = -r\omega_0^2 \varphi_m \cos(\omega_0 t)$$
 Porovnáním předchozích rovnic je vidět, že pokud měříme místo výchylky tečné zrychlení dostaneme sinusový průběh o stejné frekvenci, ale amplituda je rovna $r \omega_0^2 \varphi_m$. Bude-li mít třes vždy stejnou frekvenci, můžeme porovnávat přímo amplitudu tečného zrychlení, bude-li frekvence pokaždé jiná, musíme amplitudu tečného zrychlení vydělit frekvencí.
+
+Pro normálové zrychlení platí:
+
+$$a_d = r \omega^2 = r \omega_0^2 \varphi_m^2 sin^2(\omega_0 t)$$
 
 ### Načtení a podrobný průvodce vyhodnocením jednoho z datových souborů
 
